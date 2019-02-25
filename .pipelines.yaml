@@ -1,0 +1,31 @@
+---
+chartDefinitions: []
+containers:
+- containerName: "jenkins"
+  sourceProvider: "GITHUB"
+  sourceRepo: "autostructure/jenkins"
+  dockerRegistryProvider: "DockerHub"
+  dockerRegistry: "autostructure/jenkins"
+  dockerfilePath: "."
+  buildHardware: "shared"
+  buildImage: "Pipelines Base"
+  buildVariables: []
+  build:
+  - "### Docker Build Commands ###"
+  - "docker login -u \"$DISTELLI_DOCKER_USERNAME\" -p \"$DISTELLI_DOCKER_PW\" \"$DISTELLI_DOCKER_ENDPOINT\""
+  - "docker build --quiet=false -t \"$DISTELLI_DOCKER_REPO\" \"$DISTELLI_DOCKER_PATH\""
+  - "docker tag \"$DISTELLI_DOCKER_REPO\" \"$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM\""
+  - "docker push \"$DISTELLI_DOCKER_REPO:$DISTELLI_BUILDNUM\""
+  - "### End Docker Build Commands ###"
+  afterBuildSuccess:
+  - "docker push \"$DISTELLI_DOCKER_REPO:latest\""
+pipelines:
+- pipelineName: "New Build"
+  sources:
+  - containerName: "jenkins"
+    autoBuild:
+    - "Commit"
+    polling: true
+    branch: "master"
+  autoPromoteOnImageEvent: false
+  stages: []
